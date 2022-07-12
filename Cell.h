@@ -6,15 +6,19 @@
 #include <array>
 #include <map>
 #include <iostream>
+#include <string>
 
 using std::pair;
 using std::vector;
 using std::map;
+using std::string;
 
 class Cell {
 protected:
     pair<int, int> pos;
     bool move = true;
+
+    pair<int, int> tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
 
 public:
     sf::RectangleShape pix;
@@ -23,44 +27,29 @@ public:
     virtual ~Cell();
 };
 
-class Universe {
-
+class SandCell : public Cell {
 private:
-    // Private function which applies the laws of universe on each type of cell
-    // Is called called repetitively at each tick
-    // Each kind of cell will respect at least one law
-    // For example, water and sand will both respect the law of gravity
-    void universeLaws();
-
-private:
-    vector<vector<Cell*>> cellMatrix;
+    float velocity = 2;
+    sf::Clock clock;
 
 public:
-
-    Universe();
-    void addCell(Cell* newCell);
-    void drawCells(sf::RenderWindow& window);
-    ~Universe();
-};
-
-class SandCell : public Cell, public Universe {
-public:
-    SandCell();
     SandCell(pair<int, int> pos);
-    virtual pair<int, int> getPos();
-    virtual void applyLaw(vector<vector<Cell*>> &cellMatrix);
+
+    pair<int, int> getPos();
+    void applyLaw(vector<vector<Cell*>>& cellMatrix);
 
     ~SandCell();
 };
 
-class WaterCell : public Cell, public Universe {
+class Universe {
 private:
+    vector<vector<Cell*>> cellMatrix;
 
 public:
-    WaterCell();
-    WaterCell(pair<int, int> pos);
-    virtual pair<int, int> getPos();
-    virtual void applyLaw(vector<vector<Cell*>> &cellMatrix);
+    Universe();
+    ~Universe();
 
-    ~WaterCell();
+    void universeLaws();
+    void drawCells(sf::RenderWindow &window);
+    void addCell(Cell* cell);
 };

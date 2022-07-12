@@ -5,8 +5,11 @@
 
 int main()
 {
+    // Elements
+    bool sand = true, water = false;
+
     sf::RenderWindow window(sf::VideoMode(800, 500), "SFML works!");
-    window.setFramerateLimit(144);
+    window.setFramerateLimit(60);
     Universe universe = Universe();
 
     sf::RectangleShape pix(sf::Vector2f(2, 2));
@@ -28,13 +31,28 @@ int main()
             if (event.type == sf::Event::MouseButtonReleased) {
                 clicking = false;
             }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+                water = true;
+                sand = false;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                water = false;
+                sand = true;
+            }
             
         }
         
         if (clicking) {
-            Cell* newWCell = new SandCell(pair<int, int>(sf::Mouse::getPosition(window).y, sf::Mouse::getPosition(window).x));
-            universe.addCell(newWCell);
-
+            if (sand) {
+                Cell* newWCell = new SandCell(pair<int, int>(sf::Mouse::getPosition(window).y, sf::Mouse::getPosition(window).x));
+                universe.addCell(newWCell);
+            }
+            /*if (water) {
+                Cell* newWCell = new WaterCell(pair<int, int>(sf::Mouse::getPosition(window).y, sf::Mouse::getPosition(window).x));
+                universe.addCell(newWCell);
+            }*/
         }
 
         window.clear(sf::Color(150, 150, 150, 255));
