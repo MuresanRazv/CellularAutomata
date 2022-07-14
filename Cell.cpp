@@ -58,49 +58,21 @@ void SandCell::applyLaw(vector<vector<Cell*>>& cellMatrix)
 	if (move) {
 
 		// Check down
-		pair<int, int> moveDown = tryToMove(pair<int, int>(pos.first + moveValue, pos.second), cellMatrix);
-		if (moveDown.first != pos.first || moveDown.second != pos.second) {
-			// Update position
-			cellMatrix[pos.first][pos.second] = nullptr;
-			cellMatrix[moveDown.first][pos.second] = this;
-			pos.first = moveDown.first;
+		bool moveDown = tryToMove(pair<int, int>(pos.first + moveValue, pos.second), cellMatrix);
+		if (!moveDown) {
 
-			// Change coordinates of pixel
-			pix.move(sf::Vector2f(0, moveValue));
-			return;
-		}
+			// Check down-left
+			bool moveDownLeft = tryToMove(pair<int, int>(pos.first + 1, pos.second - 1), cellMatrix);
+			if (!moveDownLeft) {
 
-		// Check down-left
-		pair<int, int> moveDownLeft = tryToMove(pair<int, int>(pos.first + 1, pos.second - 1), cellMatrix);
-		if (moveDownLeft.first != pos.first && moveDownLeft.second != pos.second) {
-			// Update position
-			cellMatrix[pos.first][pos.second] = nullptr;
-			cellMatrix[moveDownLeft.first][moveDownLeft.second] = this;
-			pos.first = moveDownLeft.first;
-			pos.second = moveDownLeft.second;
+				// Check down-right
+				bool moveDownRight = tryToMove(pair<int, int>(pos.first + 1, pos.second + 1), cellMatrix);
+				if (!moveDownRight)
 
-			// Change coordinates of pixel
-			pix.move(sf::Vector2f(-moveValue, moveValue));
-			return;
-		}
-
-		// Check down-right
-		pair<int, int> moveDownRight = tryToMove(pair<int, int>(pos.first + 1, pos.second + 1), cellMatrix);
-		if (moveDownRight.first != pos.first && moveDownRight.second != pos.second) {
-			// Update position
-			cellMatrix[pos.first][pos.second] = nullptr;
-			cellMatrix[moveDownRight.first][moveDownRight.second] = this;
-			pos.first = moveDownRight.first;
-			pos.second = moveDownRight.second;
-
-			// Change coordinates of pixel
-			pix.move(sf::Vector2f(moveValue, moveValue));
-			return;
-		}
-
-		// Sand has fallen to a point where it doesn't have to move anymore
-		else
-			move = false;
+					// Cannot move in any direction, it is blocked
+					move = false;
+			}
+		}	
 	}
 }
 
@@ -108,12 +80,15 @@ SandCell::~SandCell()
 {
 }
 
-pair<int, int> Cell::tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix)
+bool Cell::tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix)
 {
 	// Check horizontal bound
 	bool inBoundsX = (moveValue.second > 0 && moveValue.second < 800);
 	while (!inBoundsX) {
-		moveValue.second--;
+		if (moveValue.second > pos.second)
+			moveValue.second--;
+		else
+			moveValue.second++;
 		inBoundsX = (moveValue.second > 0 && moveValue.second < 800);
 	}
 
@@ -124,20 +99,82 @@ pair<int, int> Cell::tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& 
 		inBoundsY = (moveValue.first > 0 && moveValue.first < 500);
 	}
 
-	// Check how much it can move vertically
-	if (moveValue.first > 0)
-		while (cellMatrix[moveValue.first][pos.second] && moveValue.first != pos.first) {
-			moveValue.first--;
+	// Down
+	if (moveValue.first > pos.first && moveValue.second == pos.second)
+	{
+		int i = 1;
+		bool changed = false;
+		while (pos.first != moveValue.first && pos.first + i < 500 && !cellMatrix[pos.first + i][pos.second]) {
+			cellMatrix[pos.first][pos.second] = nullptr;
+			pos.first += 1;
+			cellMatrix[pos.first][pos.second] = this;
+			changed = true;
 		}
+		if (!changed) {
+			return false;
+		}
+		else {
+			pix.setPosition(pos.second, pos.first);
+			return true;
+		}
+	}
 
-	// Check how much it can move horizontally
-	if (moveValue.second > 0)
-		while (cellMatrix[pos.first][moveValue.second] && moveValue.second != pos.second) {
-			moveValue.second--;
+	// Down left
+	else if (moveValue.first > pos.first && moveValue.second < pos.second) {
+		int i = 1, j = 1;
+		bool changed = false;
+		while (moveValue.first != pos.first && moveValue.second != pos.second && !cellMatrix[pos.first + i][pos.second - j])
+		{
+			cellMatrix[pos.first][pos.second] = nullptr;
+			pos.first += 1;
+			pos.second -= 1;
+			cellMatrix[pos.first][pos.second] = this;
+			changed = true;
 		}
+		if (!changed) {
+			return false;
+		}
+			
+		else {
+			pix.setPosition(pos.second, pos.first);
+			return true;
+		}
+	}
+
+	// Down right
+	else if (moveValue.first > pos.first && moveValue.second > pos.second) {
+		int i = 1, j = 1;
+		bool changed = false;
+		while (moveValue.first != pos.first && moveValue.second != pos.second && !cellMatrix[pos.first + i][pos.second + j])
+		{
+			cellMatrix[pos.first][pos.second] = nullptr;
+			pos.first += 1;
+			pos.second += 1;
+			cellMatrix[pos.first][pos.second] = this;
+			changed = true;
+		}
+		if (!changed) {
+			return false;
+		}
+		else {
+			pix.setPosition(pos.second, pos.first);
+			return true;
+		}
+	}
+
+	//// Check how much it can move vertically
+	//if (moveValue.first > 0)
+	//	while (cellMatrix[moveValue.first][pos.second] && moveValue.first != pos.first) {
+	//		moveValue.first--;
+	//	}
+
+	//// Check how much it can move horizontally
+	//if (moveValue.second > 0)
+	//	while (cellMatrix[pos.first][moveValue.second] && moveValue.second != pos.second) {
+	//		moveValue.second--;
+	//	}
 
 	// Return final position
-	return moveValue;
 }
 
 Cell::~Cell()

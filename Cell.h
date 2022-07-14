@@ -18,7 +18,7 @@ protected:
     pair<int, int> pos;
     bool move = true;
 
-    pair<int, int> tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
+    bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
 
 public:
     sf::RectangleShape pix;
@@ -29,7 +29,7 @@ public:
 
 class SandCell : public Cell {
 private:
-    float velocity = 2;
+    float velocity = 4;
     sf::Clock clock;
 
 public:
