@@ -14,15 +14,18 @@ using std::map;
 using std::string;
 
 class Cell {
+private:
+    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix) = 0;
+
 protected:
     pair<int, int> pos;
     bool move = true;
 
-    bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
-
 public:
+    bool solid = false;
     sf::RectangleShape pix;
     virtual pair<int, int> getPos() = 0;
+    bool getMove();
     virtual void applyLaw(vector<vector<Cell*>> &cellMatrix) = 0;
     virtual ~Cell();
 };
@@ -30,7 +33,7 @@ public:
 class SandCell : public Cell {
 private:
     float velocity = 4;
-    sf::Clock clock;
+    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
 
 public:
     SandCell(pair<int, int> pos);
@@ -39,6 +42,33 @@ public:
     void applyLaw(vector<vector<Cell*>>& cellMatrix);
 
     ~SandCell();
+};
+
+class WaterCell : public Cell {
+private:
+    float velocity = 3;
+    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
+
+public:
+    WaterCell(pair<int, int> pos);
+
+    pair<int, int> getPos();
+    void applyLaw(vector<vector<Cell*>>& cellMatrix);
+
+    ~WaterCell();
+};
+
+class WoodCell : public Cell {
+private:
+    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
+
+public:
+    WoodCell(pair<int, int> pos);
+
+    pair<int, int> getPos();
+    void applyLaw(vector<vector<Cell*>>& cellMatrix);
+
+    ~WoodCell();
 };
 
 class Universe {

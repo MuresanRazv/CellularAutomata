@@ -6,7 +6,7 @@
 int main()
 {
     // Elements
-    bool sand = true, water = false;
+    bool sand = true, water = false, wood = false;
 
     sf::RenderWindow window(sf::VideoMode(800, 500), "SFML works!");
     window.setFramerateLimit(60);
@@ -35,24 +35,45 @@ int main()
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
                 water = true;
                 sand = false;
+                wood = false;
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                 water = false;
                 sand = true;
+                wood = false;
             }
-            
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
+                water = false;
+                sand = false;
+                wood = true;
+            }
+
         }
         
         if (clicking) {
             if (sand) {
-                Cell* newWCell = new SandCell(pair<int, int>(sf::Mouse::getPosition(window).y, sf::Mouse::getPosition(window).x));
-                universe.addCell(newWCell);
+                for (int i = 0; i < 5; i++)
+                    for (int j = 0; j < 5; j++) {
+                        Cell* newWCell = new SandCell(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                        universe.addCell(newWCell);
+                    }
             }
-            /*if (water) {
-                Cell* newWCell = new WaterCell(pair<int, int>(sf::Mouse::getPosition(window).y, sf::Mouse::getPosition(window).x));
-                universe.addCell(newWCell);
-            }*/
+            if (water) {
+                for (int i = 0; i < 5; i++)
+                    for (int j = 0; j < 5; j++) {
+                        Cell* newWCell = new WaterCell(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                        universe.addCell(newWCell);
+                    }
+            }
+            if (wood) {
+                for (int i = 0; i < 5; i++)
+                    for (int j = 0; j < 5; j++) {
+                        Cell* newWCell = new WoodCell(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                        universe.addCell(newWCell);
+                    }
+            }
         }
 
         window.clear(sf::Color(150, 150, 150, 255));
