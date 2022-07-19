@@ -23,6 +23,7 @@ protected:
 
 public:
     bool solid = false;
+    bool drewStatic = false;
     sf::RectangleShape pix;
     virtual pair<int, int> getPos() = 0;
     bool getMove();
@@ -32,7 +33,7 @@ public:
 
 class SandCell : public Cell {
 private:
-    float velocity = 4;
+    float velocity = 6;
     virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
 
 public:
@@ -74,12 +75,14 @@ public:
 class Universe {
 private:
     vector<vector<Cell*>> cellMatrix;
+    sf::RenderTexture staticCells;
+    sf::RenderTexture movingCells;
 
 public:
     Universe();
     ~Universe();
 
-    void universeLaws();
-    void drawCells(sf::RenderWindow &window);
+    void universeLaws(sf::RenderTexture& texture);
+    void drawCells(sf::RenderWindow &window, sf::RenderTexture &texture);
     void addCell(Cell* cell);
 };

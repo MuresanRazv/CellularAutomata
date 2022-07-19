@@ -4,6 +4,12 @@ Universe::Universe()
 {
 	vector<Cell*> columns(800, nullptr);
 	cellMatrix.resize(500, columns);
+	
+	movingCells.create(800, 500);
+	staticCells.create(800, 500);
+
+	movingCells.clear(sf::Color::Black);
+	staticCells.clear(sf::Color::Black);
 }
 
 Universe::~Universe()
@@ -13,26 +19,55 @@ Universe::~Universe()
 			delete cellMatrix[i][j];
 }
 
-void Universe::universeLaws()
+void Universe::universeLaws(sf::RenderTexture& texture)
 {
+	// Clear moving cells texture
+	movingCells.clear(sf::Color(0, 0, 0, 0));
+
 	for (int i = 499; i >= 0; i--)
 		for (int j = 799; j >= 0; j--)
-			if (cellMatrix[i][j] && cellMatrix[i][j]->getMove())
-				cellMatrix[i][j]->applyLaw(cellMatrix);
+			if (cellMatrix[i][j] != nullptr)
+			{
+				// Draw to moving cells texture
+				if (cellMatrix[i][j]->getMove()) {
+					movingCells.draw(cellMatrix[i][j]->pix);
+					cellMatrix[i][j]->applyLaw(cellMatrix);
+				}
+
+				// Draw to static cells texture, because the cell is not moving
+				else {
+					if (!cellMatrix[i][j]->drewStatic) {
+						staticCells.draw(cellMatrix[i][j]->pix);
+						cellMatrix[i][j]->drewStatic = true;
+					}
+				}
+			}
+
+	// End frame for moving cells
+	movingCells.display();
+
+	// End frame for static cells
+	staticCells.display();
+
+	// Draw moving and static cells
+	const sf::Texture& movingTexture = movingCells.getTexture();
+	const sf::Texture& staticTexture = staticCells.getTexture();
+	sf::Sprite movingSprite(movingTexture), staticSprite(staticTexture);
+	texture.draw(staticSprite);
+	texture.draw(movingSprite);
+	
+
 }
 
-void Universe::drawCells(sf::RenderWindow &window)
+void Universe::drawCells(sf::RenderWindow &window, sf::RenderTexture& texture)
 {
-	//universeLaws();
-	for (int i = 499; i >= 0; i--)
-		for (int j = 799; j >= 0; j--) {
-			if (cellMatrix[i][j]) {
-				window.draw(cellMatrix[i][j]->pix);
-				if (cellMatrix[i][j]->getMove())
-					cellMatrix[i][j]->applyLaw(cellMatrix);
-			}
-		}
-			
+	// Draw static Cells
+	texture.clear();
+	universeLaws(texture);
+	texture.display();
+	const sf::Texture& staticCells = texture.getTexture();
+	sf::Sprite sprite(staticCells);
+	window.draw(sprite);			
 }
 
 void Universe::addCell(Cell* cell)
@@ -143,7 +178,6 @@ void SandCell::applyLaw(vector<vector<Cell*>>& cellMatrix)
 
 	int moveValue = velocity;
 
-
 	if (move) {
 
 		// Check down
@@ -156,12 +190,13 @@ void SandCell::applyLaw(vector<vector<Cell*>>& cellMatrix)
 
 				// Check down-right
 				bool moveDownRight = this->tryToMove(pair<int, int>(pos.first + moveValue, pos.second + moveValue), cellMatrix);
-				if (!moveDownRight)
+				if (!moveDownRight) {
 
 					// Cannot move in any direction, it is blocked
 					move = false;
+				}
 			}
-		}	
+		}
 	}
 }
 
@@ -316,7 +351,6 @@ void WaterCell::applyLaw(vector<vector<Cell*>>& cellMatrix)
 {
 	int moveValue = velocity;
 
-
 	if (move) {
 
 		// Check down
@@ -337,6 +371,10 @@ void WaterCell::applyLaw(vector<vector<Cell*>>& cellMatrix)
 
 						//Check right
 						bool moveRight = tryToMove(pair<int, int>(pos.first, pos.second + moveValue), cellMatrix);
+						
+						// It is blocked
+						if (!moveRight)
+							move = false;
 					}
 				}
 			}
