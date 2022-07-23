@@ -7,82 +7,121 @@
 #include <map>
 #include <iostream>
 #include <string>
+#include <SFML/Graphics/Color.hpp>
 
 using std::pair;
 using std::vector;
 using std::map;
 using std::string;
 
-class Cell {
+class Particle {
 private:
-    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix) = 0;
-
-protected:
-    pair<int, int> pos;
-    bool move = true;
+	sf::Vertex pixel;
+	sf::Vector2f velocity;
+	bool hasToMove;
+	bool solid;
+	pair<int, int> pos;
+	sf::Color color;
 
 public:
-    bool solid = false;
-    bool drewStatic = false;
-    sf::RectangleShape pix;
-    virtual pair<int, int> getPos() = 0;
-    bool getMove();
-    virtual void applyLaw(vector<vector<Cell*>> &cellMatrix) = 0;
-    virtual ~Cell();
+	// Apply law of current particle, law depends on the type of particle
+	virtual void applyLaw(vector<vector<Particle*>>& particleMatrix) = 0;
+
+	// Pixel Getter/Setter
+	sf::Vertex& getPixel();
+	void setPixelPos(sf::Vector2f pos);
+
+	// Position Setter/Getter
+	pair<int, int> getPos();
+	void setPos(pair<int, int> newPos);
+
+	// HasToMove Setter/Getter
+	bool getHasToMove();
+	void setHasToMove(bool newMove);
+
+	// Solid Setter/Getter
+	bool getSolid();
+	void setSolid(bool solid);
+
+	// Color Setter/Getter
+	sf::Color getColor();
+	void setColor(sf::Color color);
+
+	virtual ~Particle();
 };
 
-class SandCell : public Cell {
+class SandParticle : public Particle {
+public:
+	SandParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~SandParticle();
+};
+
+class WaterParticle : public Particle {
+public:
+	WaterParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~WaterParticle();
+};
+
+class Chunk {
+public:
+	Chunk(int x, int y);
+
+	// Getters/Setter
+	bool getHasToUpdate();
+	void setHasToUpdate(bool hasToUpdate);
+
+	int getX();
+	int getY();
+
 private:
-    float velocity = 6;
-    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
+	int x, y;
+	int size = 100;
+	bool hasToUpdate = false;
+
+};
+
+class ParticleSystem : public sf::Drawable, public sf::Transformable {
+public:
+	void addParticle(Particle* particle);
+	void updateFirstHalf();
+	void updateSecondHalf();
+
+private:
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
+	sf::Mutex mutex;
+
+	vector<vector<Particle*>> particleMatrix;
+	sf::VertexArray particles1;
+	sf::VertexArray particles2;
+
+	sf::VertexArray mergedParticles;
+
+	vector<Chunk> chunks;
 
 public:
-    SandCell(pair<int, int> pos);
+	ParticleSystem();
 
-    pair<int, int> getPos();
-    void applyLaw(vector<vector<Cell*>>& cellMatrix);
-
-    ~SandCell();
+	~ParticleSystem();
 };
 
-class WaterCell : public Cell {
-private:
-    float velocity = 3;
-    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
 
-public:
-    WaterCell(pair<int, int> pos);
 
-    pair<int, int> getPos();
-    void applyLaw(vector<vector<Cell*>>& cellMatrix);
+// Try to move the particle in a direction as much as possible
+// Returns false if the particle is stuck
+bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatrix, Particle* particle);
 
-    ~WaterCell();
-};
+// Function to determine in which chunk the coordinates are
+int determineChunk(int x, int y);
 
-class WoodCell : public Cell {
-private:
-    virtual bool tryToMove(pair<int, int> moveValue, vector<vector<Cell*>>& cellMatrix);
+// Function to move coordinates to next chunk
+void moveToNextChunk(int& x, int& y);
 
-public:
-    WoodCell(pair<int, int> pos);
-
-    pair<int, int> getPos();
-    void applyLaw(vector<vector<Cell*>>& cellMatrix);
-
-    ~WoodCell();
-};
-
-class Universe {
-private:
-    vector<vector<Cell*>> cellMatrix;
-    sf::RenderTexture staticCells;
-    sf::RenderTexture movingCells;
-
-public:
-    Universe();
-    ~Universe();
-
-    void universeLaws(sf::RenderTexture& texture);
-    void drawCells(sf::RenderWindow &window, sf::RenderTexture &texture);
-    void addCell(Cell* cell);
-};
+// Function to reset chunks
+void resetChunks(const vector<vector<Particle*>>& particleMatrix, vector<Chunk>& chunks);
