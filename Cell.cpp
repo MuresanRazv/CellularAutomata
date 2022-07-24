@@ -78,10 +78,13 @@ void SandParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 			bool moveDownRight = moveParticle(pair<int, int>(5, 5), particleMatrix, this);
 
 			// The particle can't move in any direction for now, so it stays
-			if (!moveDownRight)
+			if (!moveDownRight) {
+				setHasToMove(false);
 				return;
+			}
 		}
 	}
+	setHasToMove(true);
 }
 
 SandParticle::~SandParticle()
@@ -190,7 +193,7 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 int determineChunk(int x, int y)
 {
 	int nr = 0;
-	while (x > 0 && y > 0) {
+	while (x > 0 || y > 0) {
 		x -= 100;
 		y -= 100;
 		nr++;
@@ -209,22 +212,28 @@ void moveToNextChunk(int& x, int& y)
 
 void resetChunks(const vector<vector<Particle*>>& particleMatrix, vector<Chunk>& chunks)
 {
-	bool checked = false;
-	for (int i = 499; i >= 0; i--)
-		for (int j = 799; j >= 0; j--) {
-			// We found a moving particle in the current chunk so we will have to update it
-			if (particleMatrix[i][j]->getHasToMove()) {
-				chunks[determineChunk(i, j)].setHasToUpdate(true);
-				moveToNextChunk(i, j);
-				checked = true;
+	for (int i = 0; i < chunks.size(); i++)
+	{
+		// Set bounds correctly
+		int beginX = chunks[i].getX() + 100, beginY = chunks[i].getY() + 100;
+		if (beginX == 500)
+			beginX--;
+		if (beginY == 800)
+			beginY--;
+
+		// Check current chunk
+		bool checked = false;
+		for (int x = beginX; x >= chunks[i].getX() && !checked; x--)
+			for (int y = beginY; y >= chunks[i].getY() && !checked; y--) {
+				if (particleMatrix[x][y] && particleMatrix[x][y]->getHasToMove())
+				{
+					chunks[i].setHasToUpdate(true);
+					checked = true;
+				}
 			}
-			// We haven't found any moving particle in the current chunk so we don't have to process it
-			if (!checked && i % 100 == 0 && j % 100 == 0)
-			{
-				chunks[determineChunk(i, j)].setHasToUpdate(false);
-			}
-			checked = false;
-		}
+		if (!checked)
+			chunks[i].setHasToUpdate(false);
+	}
 }
 
 void ParticleSystem::addParticle(Particle* particle)
@@ -233,118 +242,42 @@ void ParticleSystem::addParticle(Particle* particle)
 	particleMatrix[particlePos.first][particlePos.second] = particle;
 }
 
-void ParticleSystem::updateFirstHalf()
+void ParticleSystem::update(int start, int finish)
 {
-	mergedParticles.clear();
-	// Attempt to optimize updating
-	// Reset chunks
-	/*resetChunks(particleMatrix, chunks);*/
-
-	// Process particles
-	//for (int i = 499; i >= 0; i--)
-	//	for (int j = 799; j >= 400; j--)
-	//	{
-	//		int currentChunk = determineChunk(i, j);
-
-	//		// If the current particle exists, we add it to the vertex array
-	//		if (particleMatrix[i][j]) {
-	//			particles1.append(particleMatrix[i][j]->getPixel());
-
-	//			bool left = (i - 1 > 0 && particleMatrix[i][j - 1]);
-	//			bool right = (j + 1 < 800 && particleMatrix[i][j + 1]);
-	//			bool downR = (i + 1 < 500 && j + 1 < 800 && particleMatrix[i + 1][j + 1]);
-	//			bool downL = (i + 1 < 500 && j - 1 > 0 && particleMatrix[i + 1][j - 1]);
-	//			bool up = (i - 1 > 0 && particleMatrix[i - 1][j]);
-
-	//			if (left && right && up && downL && downR)
-	//				particleMatrix[i][j]->setHasToMove(false);
-	//			else {
-	//				particleMatrix[i][j]->setHasToMove(true);
-	//			}
-	//		}
-
-	//		// If the current chunk is sleeping and needs to be awaken, we wake it
-	//		if (particleMatrix[i][j] && particleMatrix[i][j]->getHasToMove() && !chunks[currentChunk].getHasToUpdate()) {
-	//			chunks[currentChunk].setHasToUpdate(true);
-	//		}
-
-	//		// If the current chunk has to be processed, we process it, else, we skip to the next one
-	//		if (chunks[currentChunk].getHasToUpdate())
-	//		{
-	//			if (particleMatrix[i][j] && particleMatrix[i][j]->getHasToMove()) {
-	//				particleMatrix[i][j]->applyLaw(particleMatrix);
-	//			}
-	//		}
-	//		// Skip to the next chunk (like this we can potentially skip 10000 unecessary processes)
-	//		else
-	//			moveToNextChunk(i, j);
-	//	}
-
-	// end attempt
-	
-	particles1.clear();
-	for (int i = 499; i >= 0; i--)
-		for (int j = 799; j >= 400; j--)
-			if (particleMatrix[i][j] != nullptr) {
-				particles1.append(particleMatrix[i][j]->getPixel());
-
-				bool left = (i - 1 > 0 && particleMatrix[i][j - 1]);
-				bool right = (j + 1 < 800 && particleMatrix[i][j + 1]);
-				bool down = (i + 1 > 500 && particleMatrix[i + 1][j]);
-				bool downR = (i + 1 < 500 && j + 1 < 800 && particleMatrix[i + 1][j + 1]);
-				bool downL = (i + 1 < 500 && j - 1 > 0 && particleMatrix[i + 1][j - 1]);
-				bool up = (i - 1 > 0 && particleMatrix[i - 1][j]);
-
-				if (left && right && up && downL && downR)
-					particleMatrix[i][j]->setHasToMove(false);
-				else {
-					particleMatrix[i][j]->setHasToMove(true);
-
+			for (int x = 499; x >= 0; x--)
+				for (int y = finish; y >= start; y--) {
+					if (particleMatrix[x][y]) {
+						particlesImage.setPixel(y, x, particleMatrix[x][y]->getPixel().color);
+						particleMatrix[x][y]->applyLaw(particleMatrix);
+					}
 				}
-
-				if (particleMatrix[i][j]->getHasToMove()) {
-					particleMatrix[i][j]->applyLaw(particleMatrix);
-				}
-
-			}
-	mutex.lock();
-	for (int i = 0; i < particles1.getVertexCount(); i++)
-		mergedParticles.append(particles1[i]);
-	mutex.unlock();
 }
 
-void ParticleSystem::updateSecondHalf()
+vector<vector<Particle*>>& ParticleSystem::getParticleMatrix()
 {
+	return particleMatrix;
+}
 
-	particles2.clear();
-	vector<sf::Vertex> vertices;
+vector<Chunk>& ParticleSystem::getChunks()
+{
+	return chunks;
+}
+
+void ParticleSystem::updateParticles()
+{
+	particlesTexture.update(particlesImage);
+	particlesImage.create(800, 500);
+	/*mergedParticles.clear();
 	for (int i = 499; i >= 0; i--)
-		for (int j = 399; j >= 0; j--)
+		for (int j = 799; j >= 0; j--)
 			if (particleMatrix[i][j] != nullptr) {
-				particles2.append(particleMatrix[i][j]->getPixel());
+				if (particleMatrix[i][j]->getHasToMove())
+					particleMatrix[i][j]->setColor(sf::Color::Red);
+				else
+					particleMatrix[i][j]->setColor(sf::Color::Blue);
 
-				bool left = (i - 1 > 0 && particleMatrix[i][j - 1]);
-				bool right = (j + 1 < 800 && particleMatrix[i][j + 1]);
-				bool downR = (i + 1 < 500 && j + 1 < 800 && particleMatrix[i + 1][j + 1]);
-				bool downL = (i + 1 < 500 && j - 1 > 0 && particleMatrix[i + 1][j - 1]);
-				bool up = (i - 1 > 0 && particleMatrix[i - 1][j]);
-
-				if (left && right && up && downL && downR) {
-					particleMatrix[i][j]->setHasToMove(false);
-				}
-				else {
-					particleMatrix[i][j]->setHasToMove(true);
-				}
-
-				if (particleMatrix[i][j]->getHasToMove()) {
-					particleMatrix[i][j]->applyLaw(particleMatrix);
-				}
-
-			}
-	mutex.lock();
-	for (int i = 0; i < particles2.getVertexCount(); i++)
-		mergedParticles.append(particles2[i]);
-	mutex.unlock();
+					mergedParticles.append(particleMatrix[i][j]->getPixel());
+			}*/
 }
 
 void ParticleSystem::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -356,7 +289,9 @@ void ParticleSystem::draw(sf::RenderTarget& target, sf::RenderStates states) con
 	states.texture = NULL;
 
 	// draw the vertex array
-	target.draw(mergedParticles, states);
+	sf::Sprite sprite;
+	sprite.setTexture(particlesTexture);
+	target.draw(sprite);
 }
 
 ParticleSystem::ParticleSystem()
@@ -367,6 +302,9 @@ ParticleSystem::ParticleSystem()
 	for (int i = 0; i < 500; i += 100)
 		for (int j = 0; j < 800; j += 100)
 			chunks.push_back(Chunk(i, j));
+
+	particlesTexture.create(800, 500);
+	particlesImage.create(800, 500);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -409,8 +347,10 @@ void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 						bool moveRight = moveParticle(pair<int, int>(0, 5), particleMatrix, this);
 
 						// The particle can't move in any direction for now, so it stays
-						if (!moveRight)
+						if (!moveRight) {
+							this->setHasToMove(false);
 							return;
+						}
 					}
 				}
 

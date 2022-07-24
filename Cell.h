@@ -89,8 +89,12 @@ private:
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);
-	void updateFirstHalf();
-	void updateSecondHalf();
+	void update(int start, int finish);
+
+	vector<vector<Particle*>>& getParticleMatrix();
+	vector<Chunk>& getChunks();
+
+	void updateParticles();
 
 private:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -100,8 +104,13 @@ private:
 	vector<vector<Particle*>> particleMatrix;
 	sf::VertexArray particles1;
 	sf::VertexArray particles2;
+	sf::VertexArray particles3;
+	sf::VertexArray particles4;
 
 	sf::VertexArray mergedParticles;
+
+	sf::Texture particlesTexture;
+	sf::Image particlesImage;
 
 	vector<Chunk> chunks;
 

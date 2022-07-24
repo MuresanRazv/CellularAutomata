@@ -3,6 +3,9 @@
 #include <SFML/OpenGL.hpp>
 #include "Cell.h"
 #include <iostream>
+#include <thread>
+
+using std::thread;
 
 int main()
 {
@@ -20,10 +23,6 @@ int main()
 
     // Check if user is clicking
     bool clicking = false;
-
-    int x = 340, y = 230;
-    moveToNextChunk(x, y);
-    std::cout << x << " " << y;
 
     // Clock
     float fps;
@@ -71,7 +70,7 @@ int main()
         
         if (clicking) {
             if (sand) {
-                for (int i = 0; i < 11; i++)
+                for (int i = 0; i < 20; i++)
                     for (int j = 0; j < 11; j++) {
                             Particle* newParticle = new SandParticle(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
                             particleSystem.addParticle(newParticle);
@@ -87,12 +86,24 @@ int main()
         }
         window.clear(sf::Color(118, 118, 118));
 
+        //particleSystem.updateParticles();
+        //resetChunks(particleSystem.getParticleMatrix(), particleSystem.getChunks());
+
+        particleSystem.updateParticles();
+
         // Update Particles
-        sf::Thread thread1(&ParticleSystem::updateFirstHalf, &particleSystem);
-        sf::Thread thread2(&ParticleSystem::updateSecondHalf, &particleSystem);
-        
-        thread1.launch();
-        thread2.launch();
+        std::vector<thread> threads;
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 0, 99));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 100, 199));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 200, 299));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 300, 399));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 400, 499));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 500, 599));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 600, 699));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 700, 799));
+
+        for (auto it = threads.begin(); it != threads.end(); ++it)
+            it->join();
 
         window.draw(particleSystem);
         window.display();
