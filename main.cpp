@@ -83,11 +83,15 @@ int main()
                             particleSystem.addParticle(newParticle);
                     }
             }
+            if (wood) {
+                for (int i = 0; i < 15; i++)
+                    for (int j = 0; j < 15; j++) {
+                        Particle* newParticle = new WoodParticle(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                        particleSystem.addParticle(newParticle);
+                    }
+            }
         }
         window.clear(sf::Color(118, 118, 118));
-
-        //particleSystem.updateParticles();
-        //resetChunks(particleSystem.getParticleMatrix(), particleSystem.getChunks());
 
         particleSystem.updateParticles();
 

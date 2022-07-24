@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <SFML/Graphics/Color.hpp>
+#include <random>
 
 using std::pair;
 using std::vector;
@@ -68,22 +69,13 @@ public:
 	~WaterParticle();
 };
 
-class Chunk {
+class WoodParticle : public Particle {
 public:
-	Chunk(int x, int y);
+	WoodParticle(pair<int, int> pos);
 
-	// Getters/Setter
-	bool getHasToUpdate();
-	void setHasToUpdate(bool hasToUpdate);
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
 
-	int getX();
-	int getY();
-
-private:
-	int x, y;
-	int size = 100;
-	bool hasToUpdate = false;
-
+	~WoodParticle();
 };
 
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
@@ -92,27 +84,17 @@ public:
 	void update(int start, int finish);
 
 	vector<vector<Particle*>>& getParticleMatrix();
-	vector<Chunk>& getChunks();
+
 
 	void updateParticles();
 
 private:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	sf::Mutex mutex;
-
 	vector<vector<Particle*>> particleMatrix;
-	sf::VertexArray particles1;
-	sf::VertexArray particles2;
-	sf::VertexArray particles3;
-	sf::VertexArray particles4;
-
-	sf::VertexArray mergedParticles;
-
+	
 	sf::Texture particlesTexture;
 	sf::Image particlesImage;
-
-	vector<Chunk> chunks;
 
 public:
 	ParticleSystem();
@@ -125,12 +107,3 @@ public:
 // Try to move the particle in a direction as much as possible
 // Returns false if the particle is stuck
 bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatrix, Particle* particle);
-
-// Function to determine in which chunk the coordinates are
-int determineChunk(int x, int y);
-
-// Function to move coordinates to next chunk
-void moveToNextChunk(int& x, int& y);
-
-// Function to reset chunks
-void resetChunks(const vector<vector<Particle*>>& particleMatrix, vector<Chunk>& chunks);

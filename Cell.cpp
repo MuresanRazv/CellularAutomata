@@ -42,7 +42,8 @@ void Particle::setSolid(bool solid)
 
 sf::Color Particle::getColor()
 {
-	return color;
+	if (this)
+		return color;
 }
 
 void Particle::setColor(sf::Color color)
@@ -59,7 +60,11 @@ SandParticle::SandParticle(pair<int, int> pos)
 {
 	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
 	this->setPos(pos);
-	this->setColor(sf::Color::Yellow);
+	int randomYellow = rand() % 10 + 1;
+	if (randomYellow % 2 == 0)
+		this->setColor(sf::Color::Yellow);
+	else
+		this->setColor(sf::Color(224, 206, 0));
 	this->setSolid(true);
 	this->setHasToMove(true);
 }
@@ -190,52 +195,6 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 		return false;
 }
 
-int determineChunk(int x, int y)
-{
-	int nr = 0;
-	while (x > 0 || y > 0) {
-		x -= 100;
-		y -= 100;
-		nr++;
-	}
-
-	return nr - 1;
-}
-
-void moveToNextChunk(int& x, int& y)
-{
-	while (y % 100 != 0)
-		y--;
-	while (x % 100 != 0)
-		x--;
-}
-
-void resetChunks(const vector<vector<Particle*>>& particleMatrix, vector<Chunk>& chunks)
-{
-	for (int i = 0; i < chunks.size(); i++)
-	{
-		// Set bounds correctly
-		int beginX = chunks[i].getX() + 100, beginY = chunks[i].getY() + 100;
-		if (beginX == 500)
-			beginX--;
-		if (beginY == 800)
-			beginY--;
-
-		// Check current chunk
-		bool checked = false;
-		for (int x = beginX; x >= chunks[i].getX() && !checked; x--)
-			for (int y = beginY; y >= chunks[i].getY() && !checked; y--) {
-				if (particleMatrix[x][y] && particleMatrix[x][y]->getHasToMove())
-				{
-					chunks[i].setHasToUpdate(true);
-					checked = true;
-				}
-			}
-		if (!checked)
-			chunks[i].setHasToUpdate(false);
-	}
-}
-
 void ParticleSystem::addParticle(Particle* particle)
 {
 	pair<int, int> particlePos = particle->getPos();
@@ -244,13 +203,14 @@ void ParticleSystem::addParticle(Particle* particle)
 
 void ParticleSystem::update(int start, int finish)
 {
-			for (int x = 499; x >= 0; x--)
-				for (int y = finish; y >= start; y--) {
-					if (particleMatrix[x][y]) {
-						particlesImage.setPixel(y, x, particleMatrix[x][y]->getPixel().color);
-						particleMatrix[x][y]->applyLaw(particleMatrix);
-					}
-				}
+	for (int x = 499; x >= 0; x--) {
+		for (int y = finish; y >= start; y--) {
+			if (particleMatrix[x][y] != nullptr) {
+				particlesImage.setPixel(y, x, particleMatrix[x][y]->getColor());
+				particleMatrix[x][y]->applyLaw(particleMatrix);
+			}	
+		}
+	}
 }
 
 vector<vector<Particle*>>& ParticleSystem::getParticleMatrix()
@@ -258,26 +218,10 @@ vector<vector<Particle*>>& ParticleSystem::getParticleMatrix()
 	return particleMatrix;
 }
 
-vector<Chunk>& ParticleSystem::getChunks()
-{
-	return chunks;
-}
-
 void ParticleSystem::updateParticles()
 {
 	particlesTexture.update(particlesImage);
-	particlesImage.create(800, 500);
-	/*mergedParticles.clear();
-	for (int i = 499; i >= 0; i--)
-		for (int j = 799; j >= 0; j--)
-			if (particleMatrix[i][j] != nullptr) {
-				if (particleMatrix[i][j]->getHasToMove())
-					particleMatrix[i][j]->setColor(sf::Color::Red);
-				else
-					particleMatrix[i][j]->setColor(sf::Color::Blue);
-
-					mergedParticles.append(particleMatrix[i][j]->getPixel());
-			}*/
+	particlesImage.create(800, 500, sf::Color(31, 31, 30));
 }
 
 void ParticleSystem::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -298,10 +242,6 @@ ParticleSystem::ParticleSystem()
 {
 	vector<Particle*> columns(800, nullptr);
 	particleMatrix.resize(500, columns);
-
-	for (int i = 0; i < 500; i += 100)
-		for (int j = 0; j < 800; j += 100)
-			chunks.push_back(Chunk(i, j));
 
 	particlesTexture.create(800, 500);
 	particlesImage.create(800, 500);
@@ -325,26 +265,24 @@ WaterParticle::WaterParticle(pair<int, int> pos)
 
 void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 {
-	if (getHasToMove()) {
-
 		// Try moving the particle down using a constant speed (for now)
 		bool moveDown = moveParticle(pair<int, int>(5, 0), particleMatrix, this);
 
 		if (!moveDown) {
 			// Try moving the particle down-left
-			bool moveDownLeft = moveParticle(pair<int, int>(5, -5), particleMatrix, this);
+			bool moveDownLeft = moveParticle(pair<int, int>(10, -10), particleMatrix, this);
 
 			if (!moveDownLeft) {
 				// Try moving the particle down-right
-				bool moveDownRight = moveParticle(pair<int, int>(5, 5), particleMatrix, this);
+				bool moveDownRight = moveParticle(pair<int, int>(10, 10), particleMatrix, this);
 
 				// Try moving the particle left
 				if (!moveDownRight) {
-					bool moveLeft = moveParticle(pair<int, int>(0, -5), particleMatrix, this);
+					bool moveLeft = moveParticle(pair<int, int>(0, -20), particleMatrix, this);
 
 					// Try moving the particle right
 					if (!moveLeft) {
-						bool moveRight = moveParticle(pair<int, int>(0, 5), particleMatrix, this);
+						bool moveRight = moveParticle(pair<int, int>(0, 20), particleMatrix, this);
 
 						// The particle can't move in any direction for now, so it stays
 						if (!moveRight) {
@@ -356,35 +294,26 @@ void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			}
 		}
-	}
+		this->setHasToMove(true);
 }
 
 WaterParticle::~WaterParticle()
 {
 }
 
-Chunk::Chunk(int x, int y)
+WoodParticle::WoodParticle(pair<int, int> pos)
 {
-	this->x = x;
-	this->y = y;
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	this->setColor(sf::Color(97, 58, 14));
+	this->setSolid(true);
+	this->setHasToMove(false);
 }
 
-bool Chunk::getHasToUpdate()
+void WoodParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 {
-	return hasToUpdate;
 }
 
-void Chunk::setHasToUpdate(bool hasToUpdate)
+WoodParticle::~WoodParticle()
 {
-	this->hasToUpdate = hasToUpdate;
-}
-
-int Chunk::getX()
-{
-	return x;
-}
-
-int Chunk::getY()
-{
-	return y;
 }
