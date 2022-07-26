@@ -291,7 +291,7 @@ void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (!moveDownLeft) {
 				// Try moving the particle down-right
-				bool moveDownRight = moveParticle(pair<int, int>(GRAVITY, getVelocity()), particleMatrix, this);
+				bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
 
 				// Try moving the particle left
 				if (!moveDownRight) {

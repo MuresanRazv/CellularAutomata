@@ -66,20 +66,19 @@ int main()
                 sand = false;
                 wood = true;
             }
-
         }
         
         if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
             if (sand) {
-                for (int i = 0; i < 20; i++)
-                    for (int j = 0; j < 11; j++) {
+                for (int i = -10; i < 10; i++)
+                    for (int j = -10; j < 10; j++) {
                         Particle* newParticle = new SandParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                         particleSystem.addParticle(newParticle);
                     }
             }
             if (water) {
-                for (int i = 0; i < 11; i++)
-                    for (int j = 0; j < 11; j++) {
+                for (int i = -5; i < 5; i++)
+                    for (int j = -5; j < 5; j++) {
                             Particle* newParticle = new WaterParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                             particleSystem.addParticle(newParticle);
                     }
@@ -98,11 +97,22 @@ int main()
 
         // Update Particles
         std::vector<thread> threads;
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 0, 99));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 100, 199));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 200, 299));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 300, 399));
+        int randomOffset = rand() % 20 + 1;
 
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 0, 49 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 100 + randomOffset, 149 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 200 + randomOffset, 249 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 300 + randomOffset, 349 + randomOffset));
+        
+        for (auto it = threads.begin(); it != threads.end(); ++it)
+            it->join();
+
+        threads.clear();
+
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 50 + randomOffset, 99 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 150 + randomOffset, 199 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 250 + randomOffset, 299 + randomOffset));
+        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 350 + randomOffset, 399));
 
         for (auto it = threads.begin(); it != threads.end(); ++it)
             it->join();
