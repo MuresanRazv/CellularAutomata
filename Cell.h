@@ -15,10 +15,14 @@ using std::vector;
 using std::map;
 using std::string;
 
+const int GRAVITY = 5;
+const float FRICTION = 0.5;
+const float ACCELERATION = 1.75;
+
 class Particle {
 private:
 	sf::Vertex pixel;
-	sf::Vector2f velocity;
+	int velocity;
 	bool hasToMove;
 	bool solid;
 	pair<int, int> pos;
@@ -47,6 +51,10 @@ public:
 	// Color Setter/Getter
 	sf::Color getColor();
 	void setColor(sf::Color color);
+
+	// Velocity Setter/Getter
+	int getVelocity();
+	void setVelocity(int velocity);
 
 	virtual ~Particle();
 };

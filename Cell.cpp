@@ -52,6 +52,16 @@ void Particle::setColor(sf::Color color)
 	this->pixel.color = color;
 }
 
+int Particle::getVelocity()
+{
+	return velocity;
+}
+
+void Particle::setVelocity(int velocity)
+{
+	this->velocity = velocity;
+}
+
 Particle::~Particle()
 {
 }
@@ -67,20 +77,24 @@ SandParticle::SandParticle(pair<int, int> pos)
 		this->setColor(sf::Color(224, 206, 0));
 	this->setSolid(true);
 	this->setHasToMove(true);
+	this->setVelocity(2);
 }
 
 void SandParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 {
+	if (getVelocity() < 5)
+		setVelocity(getVelocity() * ACCELERATION - FRICTION);
+
 	// Try moving the particle down using a constant speed (for now)
-	bool moveDown = moveParticle(pair<int, int>(5, 0), particleMatrix, this);
+	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
 
 	if (!moveDown) {
 		// Try moving the particle down-left
-		bool moveDownLeft = moveParticle(pair<int, int>(5, -5), particleMatrix, this);
+		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
 
 		if (!moveDownLeft) {
 			// Try moving the particle down-right
-			bool moveDownRight = moveParticle(pair<int, int>(5, 5), particleMatrix, this);
+			bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
 
 			// The particle can't move in any direction for now, so it stays
 			if (!moveDownRight) {
@@ -99,14 +113,14 @@ SandParticle::~SandParticle()
 bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatrix, Particle* particle)
 {
 	pair<int, int> particlePos = particle->getPos();
-
+	
 	// Now check how much it can move before being blocked by another particle
 
 	// If the particle is falling down
 	bool changed = false; int desiredY = particle->getPos().first + moveBy.first;
 	if (moveBy.first > 0 && moveBy.second == 0) {
 		int x = 1; 
-		while (particle->getPos().first + x <= desiredY && x + particle->getPos().first < 500 && !particleMatrix[particlePos.first + x][particlePos.second]) {
+		while (particle->getPos().first + x <= desiredY && x + particle->getPos().first < 300 && !particleMatrix[particlePos.first + x][particlePos.second]) {
 			changed = true;
 			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
 			particleMatrix[particlePos.first + x][particlePos.second] = particle;
@@ -120,7 +134,7 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	int desiredX = particle->getPos().second + moveBy.second;
 	if (moveBy.first > 0 && moveBy.second < 0) {
 		int x = 1, y = -1;
-		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y >= desiredX && x + particle->getPos().first < 500 && y + particle->getPos().second > 0 &&
+		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y >= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second > 0 &&
 			!particleMatrix[particlePos.first + x][particlePos.second + y]) {
 			changed = true;
 			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
@@ -140,7 +154,7 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	desiredX = particle->getPos().second + moveBy.second;
 	if (moveBy.first > 0 && moveBy.second > 0) {
 		int x = 1, y = 1;
-		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y <= desiredX && x + particle->getPos().first < 500 && y + particle->getPos().second < 800 &&
+		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y <= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second < 400 &&
 			!particleMatrix[particlePos.first + x][particlePos.second + y]) {
 			changed = true;
 			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
@@ -173,7 +187,7 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	desiredY = particle->getPos().second + moveBy.second;
 	if (moveBy.first == 0 && moveBy.second > 0) {
 		int x = 1;
-		while (particle->getPos().second + x <= desiredX && x + particle->getPos().second < 800 &&
+		while (particle->getPos().second + x <= desiredX && x + particle->getPos().second < 400 &&
 			!particleMatrix[particlePos.first][particlePos.second + x]) {
 			changed = true;
 			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
@@ -188,7 +202,7 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	// Otherwise, we return false
 
 	if (changed) {
-		particle->setPixelPos(sf::Vector2f(particle->getPos().second, particle->getPos().first));
+		particle->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
 		return true;
 	}
 	else
@@ -203,10 +217,12 @@ void ParticleSystem::addParticle(Particle* particle)
 
 void ParticleSystem::update(int start, int finish)
 {
-	for (int x = 499; x >= 0; x--) {
+	for (int x = 299; x >= 0; x--) {
 		for (int y = finish; y >= start; y--) {
 			if (particleMatrix[x][y] != nullptr) {
-				particlesImage.setPixel(y, x, particleMatrix[x][y]->getColor());
+				for (int i = 0; i < 3; i++)
+					for (int j = 0; j < 3; j++)
+						particlesImage.setPixel(y * 3 + i, x * 3 + j, particleMatrix[x][y]->getColor());
 				particleMatrix[x][y]->applyLaw(particleMatrix);
 			}	
 		}
@@ -221,7 +237,7 @@ vector<vector<Particle*>>& ParticleSystem::getParticleMatrix()
 void ParticleSystem::updateParticles()
 {
 	particlesTexture.update(particlesImage);
-	particlesImage.create(800, 500, sf::Color(31, 31, 30));
+	particlesImage.create(1200, 900, sf::Color(31, 31, 30));
 }
 
 void ParticleSystem::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -240,17 +256,17 @@ void ParticleSystem::draw(sf::RenderTarget& target, sf::RenderStates states) con
 
 ParticleSystem::ParticleSystem()
 {
-	vector<Particle*> columns(800, nullptr);
-	particleMatrix.resize(500, columns);
+	vector<Particle*> columns(400, nullptr);
+	particleMatrix.resize(300, columns);
 
-	particlesTexture.create(800, 500);
-	particlesImage.create(800, 500);
+	particlesTexture.create(1200, 900);
+	particlesImage.create(1200, 900);
 }
 
 ParticleSystem::~ParticleSystem()
 {
-	for (int i = 0; i < 500; i++)
-		for (int j = 0; j < 800; j++)
+	for (int i = 0; i < 300; i++)
+		for (int j = 0; j < 400; j++)
 			delete particleMatrix[i][j];
 }
 
@@ -261,28 +277,29 @@ WaterParticle::WaterParticle(pair<int, int> pos)
 	this->setColor(sf::Color::Blue);
 	this->setSolid(false);
 	this->setHasToMove(true);
+	this->setVelocity(10);
 }
 
 void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 {
 		// Try moving the particle down using a constant speed (for now)
-		bool moveDown = moveParticle(pair<int, int>(5, 0), particleMatrix, this);
+		bool moveDown = moveParticle(pair<int, int>(GRAVITY, 0), particleMatrix, this);
 
 		if (!moveDown) {
 			// Try moving the particle down-left
-			bool moveDownLeft = moveParticle(pair<int, int>(10, -10), particleMatrix, this);
+			bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
 
 			if (!moveDownLeft) {
 				// Try moving the particle down-right
-				bool moveDownRight = moveParticle(pair<int, int>(10, 10), particleMatrix, this);
+				bool moveDownRight = moveParticle(pair<int, int>(GRAVITY, getVelocity()), particleMatrix, this);
 
 				// Try moving the particle left
 				if (!moveDownRight) {
-					bool moveLeft = moveParticle(pair<int, int>(0, -20), particleMatrix, this);
+					bool moveLeft = moveParticle(pair<int, int>(0, -getVelocity()), particleMatrix, this);
 
 					// Try moving the particle right
 					if (!moveLeft) {
-						bool moveRight = moveParticle(pair<int, int>(0, 20), particleMatrix, this);
+						bool moveRight = moveParticle(pair<int, int>(0, getVelocity()), particleMatrix, this);
 
 						// The particle can't move in any direction for now, so it stays
 						if (!moveRight) {

@@ -18,8 +18,9 @@ int main()
     ParticleSystem particleSystem;
 
     // Render Window for drawing
-    sf::RenderWindow window(sf::VideoMode(800, 500), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode(1200, 900), "SFML works!");
     window.setFramerateLimit(144);
+    window.setPosition(sf::Vector2i(300, 50));
 
     // Check if user is clicking
     bool clicking = false;
@@ -68,25 +69,25 @@ int main()
 
         }
         
-        if (clicking) {
+        if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
             if (sand) {
                 for (int i = 0; i < 20; i++)
                     for (int j = 0; j < 11; j++) {
-                            Particle* newParticle = new SandParticle(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
-                            particleSystem.addParticle(newParticle);
+                        Particle* newParticle = new SandParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
+                        particleSystem.addParticle(newParticle);
                     }
             }
             if (water) {
                 for (int i = 0; i < 11; i++)
                     for (int j = 0; j < 11; j++) {
-                            Particle* newParticle = new WaterParticle(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                            Particle* newParticle = new WaterParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                             particleSystem.addParticle(newParticle);
                     }
             }
             if (wood) {
                 for (int i = 0; i < 15; i++)
                     for (int j = 0; j < 15; j++) {
-                        Particle* newParticle = new WoodParticle(pair<int, int>(sf::Mouse::getPosition(window).y + i, sf::Mouse::getPosition(window).x + j));
+                        Particle* newParticle = new WoodParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                         particleSystem.addParticle(newParticle);
                     }
             }
@@ -101,10 +102,7 @@ int main()
         threads.push_back(thread(&ParticleSystem::update, &particleSystem, 100, 199));
         threads.push_back(thread(&ParticleSystem::update, &particleSystem, 200, 299));
         threads.push_back(thread(&ParticleSystem::update, &particleSystem, 300, 399));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 400, 499));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 500, 599));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 600, 699));
-        threads.push_back(thread(&ParticleSystem::update, &particleSystem, 700, 799));
+
 
         for (auto it = threads.begin(); it != threads.end(); ++it)
             it->join();
