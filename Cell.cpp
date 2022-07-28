@@ -378,3 +378,12 @@ void WoodParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 WoodParticle::~WoodParticle()
 {
 }
+
+FireParticle::FireParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	this->setColor(sf::Color(150, 0, 0));
+	this->setSolid(false);
+	this->setHasToMove(false);
+}

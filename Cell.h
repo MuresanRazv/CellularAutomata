@@ -86,6 +86,19 @@ public:
 	~WoodParticle();
 };
 
+class FireParticle : public Particle {
+private:
+	sf::Clock lifetime;
+	bool canSpread = false;
+
+public:
+	FireParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~FireParticle();
+};
+
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);
