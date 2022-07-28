@@ -120,11 +120,26 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	bool changed = false; int desiredY = particle->getPos().first + moveBy.first;
 	if (moveBy.first > 0 && moveBy.second == 0) {
 		int x = 1; 
-		while (particle->getPos().first + x <= desiredY && x + particle->getPos().first < 300 && !particleMatrix[particlePos.first + x][particlePos.second]) {
-			changed = true;
-			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
-			particleMatrix[particlePos.first + x][particlePos.second] = particle;
-			particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second));
+		while (particle->getPos().first + x <= desiredY && x + particle->getPos().first < 300) {
+			// If the cell is empty we simply move the particle
+			if (!particleMatrix[particlePos.first + x][particlePos.second]) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
+				particleMatrix[particlePos.first + x][particlePos.second] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second));
+			}
+			// If the cell is not empty, but a liquid and the particle is a solid, it will submerge
+			else if (particle->getSolid() && !particleMatrix[particlePos.first + x][particlePos.second]->getSolid()) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = particleMatrix[particlePos.first + x][particlePos.second];
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPos(pair<int, int>(particle->getPos().first, particle->getPos().second));
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
+
+				particleMatrix[particlePos.first + x][particlePos.second] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second));
+			}
+			// Else, the cell cannot move anymore so we stop looking
+			else break;
 			x++;
 		}
 	}
@@ -134,12 +149,27 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	int desiredX = particle->getPos().second + moveBy.second;
 	if (moveBy.first > 0 && moveBy.second < 0) {
 		int x = 1, y = -1;
-		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y >= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second > 0 &&
-			!particleMatrix[particlePos.first + x][particlePos.second + y]) {
-			changed = true;
-			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
-			particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
-			particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y >= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second > 0) {
+			// If the cell is empty we simply move the particle
+			if (!particleMatrix[particlePos.first + x][particlePos.second + y]) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			// If the cell is not empty, but a liquid and the particle is a solid, it will submerge
+			else if (particle->getSolid() && !particleMatrix[particlePos.first + x][particlePos.second + y]->getSolid()) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = particleMatrix[particlePos.first + x][particlePos.second + y];
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPos(pair<int, int>(particle->getPos().first, particle->getPos().second));
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
+
+
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			// Else, the cell cannot move anymore so we stop looking
+			else break;
 			
 			if (particle->getPos().first + x <= desiredY)
 				x++;
@@ -154,13 +184,28 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 	desiredX = particle->getPos().second + moveBy.second;
 	if (moveBy.first > 0 && moveBy.second > 0) {
 		int x = 1, y = 1;
-		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y <= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second < 400 &&
-			!particleMatrix[particlePos.first + x][particlePos.second + y]) {
-			changed = true;
-			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
-			particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
-			particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
-			
+		while (particle->getPos().first + x <= desiredY && particle->getPos().second + y <= desiredX && x + particle->getPos().first < 300 && y + particle->getPos().second < 400) {
+			// If the cell is empty we simply move the particle
+			if (!particleMatrix[particlePos.first + x][particlePos.second + y]) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			// If the cell is not empty, but a liquid and the particle is a solid, it will submerge
+			else if (particle->getSolid() && !particleMatrix[particlePos.first + x][particlePos.second + y]->getSolid()) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = particleMatrix[particlePos.first + x][particlePos.second + y];
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPos(pair<int, int>(particle->getPos().first, particle->getPos().second));
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
+
+
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			// Else, the cell cannot move anymore so we stop looking
+			else break;
+
 			if (particle->getPos().first + x <= desiredY)
 				x++;
 
@@ -308,7 +353,6 @@ void WaterParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 						}
 					}
 				}
-
 			}
 		}
 		this->setHasToMove(true);
