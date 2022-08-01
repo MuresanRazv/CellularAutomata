@@ -15,9 +15,9 @@ using std::vector;
 using std::map;
 using std::string;
 
-const int GRAVITY = 5;
 const float FRICTION = 0.5;
 const float ACCELERATION = 1.75;
+const float FIRE_LIFETIME = 4;
 
 class Particle {
 private:
@@ -25,6 +25,7 @@ private:
 	int velocity;
 	bool hasToMove;
 	bool solid;
+	bool flammable = false;
 	pair<int, int> pos;
 	sf::Color color;
 
@@ -55,6 +56,10 @@ public:
 	// Velocity Setter/Getter
 	int getVelocity();
 	void setVelocity(int velocity);
+
+	// Flammable Setter/Getter
+	bool getFlammable();
+	void setFlammable(bool flammable);
 
 	virtual ~Particle();
 };
@@ -89,7 +94,6 @@ public:
 class FireParticle : public Particle {
 private:
 	sf::Clock lifetime;
-	bool canSpread = false;
 
 public:
 	FireParticle(pair<int, int> pos);
@@ -97,6 +101,18 @@ public:
 	void applyLaw(vector<vector<Particle*>>& particleMatrix);
 
 	~FireParticle();
+};
+
+class SmokeParticle : public Particle {
+private:
+	sf::Clock lifetime;
+
+public:
+	SmokeParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~SmokeParticle();
 };
 
 class ParticleSystem : public sf::Drawable, public sf::Transformable {

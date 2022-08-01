@@ -12,7 +12,8 @@ int main()
     sf::Mutex mutex;
 
     // Elements
-    bool sand = true, water = false, wood = false;
+    int sand = 0, water = 1, wood = 2, fire = 3;
+    int current = 0;
 
     // Create Particle System
     ParticleSystem particleSystem;
@@ -49,48 +50,77 @@ int main()
                 clicking = false;
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-                water = true;
-                sand = false;
-                wood = false;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                current = 0;
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-                water = false;
-                sand = true;
-                wood = false;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+                current = 1;
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
-                water = false;
-                sand = false;
-                wood = true;
+                current = 2;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+                current = 3;
             }
         }
-        
-        if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
-            if (sand) {
+
+        switch (current)
+        {
+        case 0:
+        {
+            if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
                 for (int i = -10; i < 10; i++)
                     for (int j = -10; j < 10; j++) {
                         Particle* newParticle = new SandParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                         particleSystem.addParticle(newParticle);
                     }
             }
-            if (water) {
-                for (int i = -5; i < 5; i++)
-                    for (int j = -5; j < 5; j++) {
-                            Particle* newParticle = new WaterParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
-                            particleSystem.addParticle(newParticle);
+            break;
+        }
+
+        case 1:
+        {
+            if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
+                for (int i = -10; i < 10; i++)
+                    for (int j = -10; j < 10; j++) {
+                        Particle* newParticle = new WaterParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
+                        particleSystem.addParticle(newParticle);
                     }
             }
-            if (wood) {
-                for (int i = 0; i < 15; i++)
-                    for (int j = 0; j < 15; j++) {
+            break;
+        }
+
+        case 2:
+        {
+            if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
+                for (int i = -10; i < 10; i++)
+                    for (int j = -10; j < 10; j++) {
                         Particle* newParticle = new WoodParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                         particleSystem.addParticle(newParticle);
                     }
             }
+            break;
         }
+
+        case 3:
+        {
+            if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
+                for (int i = -5; i < 5; i++)
+                    for (int j = -5; j < 5; j++) {
+                        Particle* newParticle = new FireParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
+                        particleSystem.addParticle(newParticle);
+                    }
+            }
+            break;
+        }
+
+        default:
+            break;
+        }
+
         window.clear(sf::Color(118, 118, 118));
 
         particleSystem.updateParticles();
