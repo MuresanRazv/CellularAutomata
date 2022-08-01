@@ -17,7 +17,8 @@ pair<int, int> Particle::getPos()
 
 void Particle::setPos(pair<int, int> newPos)
 {
-	pos = newPos;
+	pos.first = newPos.first;
+	pos.second = newPos.second;
 }
 
 bool Particle::getHasToMove()
@@ -253,17 +254,45 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 		}
 	}
 
-	// If the particle is floating up
-	desiredY = particle->getPos().first + moveBy.first;
-	if (moveBy.first < 0 && moveBy.second == 0) {
-		int y = -1;
-		while (particle->getPos().first + y >= desiredY && y + particle->getPos().first > 0 &&
-			!particleMatrix[particlePos.first + y][particlePos.second]) {
-			changed = true;
-			particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
-			particleMatrix[particlePos.first + y][particlePos.second] = particle;
-			particle->setPos(pair<int, int>(particlePos.first + y, particlePos.second));
-			y--;
+	// If the particle is floating up-left
+	if (moveBy.first < 0 && moveBy.second < 0) {
+		desiredY = particle->getPos().first + moveBy.first;
+		desiredX = particle->getPos().second + moveBy.second;
+		int x = -1, y = -1;
+		while (particle->getPos().first + x >= desiredY && particle->getPos().second + y >= desiredX && x + particle->getPos().first > 0 && y + particle->getPos().second > 0) {
+			// If the cell is empty we simply move the particle
+			if (!particleMatrix[particlePos.first + x][particlePos.second + y]) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			if (particle->getPos().first + x >= desiredY)
+				x--;
+
+			if (particle->getPos().second + y >= desiredX)
+				y--;
+		}
+	}
+
+	// If the particle is floating up-right
+	if (moveBy.first < 0 && moveBy.second > 0) {
+		desiredY = particle->getPos().first + moveBy.first;
+		desiredX = particle->getPos().second + moveBy.second;
+		int x = -1, y = 1;
+		while (particle->getPos().first + x >= desiredY && particle->getPos().second + y <= desiredX && x + particle->getPos().first > 0 && y + particle->getPos().second < 400) {
+			// If the cell is empty we simply move the particle
+			if (!particleMatrix[particlePos.first + x][particlePos.second + y]) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = nullptr;
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			if (particle->getPos().first + x >= desiredY)
+				x--;
+
+			if (particle->getPos().second + y <= desiredX)
+				y++;
 		}
 	}
 
@@ -600,8 +629,31 @@ SmokeParticle::SmokeParticle(pair<int, int> pos)
 
 void SmokeParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 {
+	// If the lifetime of the smoke has passed it's limit, purge it
+	if (lifetime.getElapsedTime().asSeconds() > SMOKE_LIFETIME) {
+		particleMatrix[getPos().first][getPos().second] = nullptr;
+		return;
+	}
+
+	// I will give the particle a 50% chance to float up-left first time and same for up-right
+	// I can't make it float straight up because of the way cells are processed: bottom-top
+
+	int randUp = rand() % 2 + 1;
+	int randX = rand() % 5 + 1;
+	int randY = rand() % 5 + 1;
+	if (randUp % 2 == 0) {
+		randUp = -1;
+		randX *= -1;
+	}
+	else {
+		randUp = 1;
+		randY *= -1;
+	}
+
+	int randSpeed = rand() % 5 + 1;
+
 	// Try moving the particle up
-	bool moveUp = moveParticle(pair<int, int>(-1, 0), particleMatrix, this);
+	bool moveUp = moveParticle(pair<int, int>(-1 * randSpeed + randX, randUp * randSpeed + randY), particleMatrix, this);
 
 	if (!moveUp) {
 		// Try moving the particle left

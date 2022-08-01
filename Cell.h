@@ -18,6 +18,7 @@ using std::string;
 const float FRICTION = 0.5;
 const float ACCELERATION = 1.75;
 const float FIRE_LIFETIME = 4;
+const float SMOKE_LIFETIME = 7;
 
 class Particle {
 private:
