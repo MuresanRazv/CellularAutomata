@@ -288,6 +288,17 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
 				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
 			}
+			// If the cell is not empty, but a liquid and the particle is a gas, it will float through the water
+			else if (!particle->getSolid() && !particleMatrix[particlePos.first + x][particlePos.second + y]->getSolid()) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = particleMatrix[particlePos.first + x][particlePos.second + y];
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPos(pair<int, int>(particle->getPos().first, particle->getPos().second));
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
+
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			else break;
 			if (particle->getPos().first + x >= desiredY)
 				x--;
 
