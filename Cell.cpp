@@ -434,7 +434,17 @@ WoodParticle::WoodParticle(pair<int, int> pos)
 {
 	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
 	this->setPos(pos);
-	this->setColor(sf::Color(97, 58, 14));
+	int randBrown = rand() % 8 + 1;
+	switch (randBrown)
+	{
+	case 8: {
+		this->setColor(sf::Color(51, 34, 22));
+		break;
+	}
+	default:
+		this->setColor(sf::Color(82, 48, 24));
+		break;
+	}
 	this->setSolid(true);
 	this->setHasToMove(false);
 	this->setFlammable(true);
