@@ -65,6 +65,10 @@ int main()
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
                 current = 3;
             }
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                current = 4;
+            }
         }
 
         switch (current)
@@ -111,6 +115,17 @@ int main()
                 for (int i = -5; i < 5; i++)
                     for (int j = -5; j < 5; j++) {
                         Particle* newParticle = new FireParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
+                        particleSystem.addParticle(newParticle);
+                    }
+            }
+            break;
+        }
+        case 4:
+        {
+            if (clicking && 0 < sf::Mouse::getPosition(window).x < 1200 && 0 < sf::Mouse::getPosition(window).y < 900) {
+                for (int i = -5; i < 5; i++)
+                    for (int j = -5; j < 5; j++) {
+                        Particle* newParticle = new AcidParticle(pair<int, int>((sf::Mouse::getPosition(window).y / 3) + i, (sf::Mouse::getPosition(window).x / 3) + j));
                         particleSystem.addParticle(newParticle);
                     }
             }

@@ -116,6 +116,19 @@ public:
 	~SmokeParticle();
 };
 
+class AcidParticle : public Particle {
+private:
+	int limit;
+	int current = 0;
+
+public:
+	AcidParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~AcidParticle();
+};
+
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);

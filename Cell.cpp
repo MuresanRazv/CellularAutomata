@@ -1,127 +1,5 @@
 #include "Cell.h"
 
-sf::Vertex& Particle::getPixel()
-{
-	return pixel;
-}
-
-void Particle::setPixelPos(sf::Vector2f pos)
-{
-	pixel.position = pos;
-}
-
-pair<int, int> Particle::getPos()
-{
-	return pos;
-}
-
-void Particle::setPos(pair<int, int> newPos)
-{
-	pos.first = newPos.first;
-	pos.second = newPos.second;
-}
-
-bool Particle::getHasToMove()
-{
-	return hasToMove;
-}
-
-void Particle::setHasToMove(bool newMove)
-{
-	hasToMove = newMove;
-}
-
-bool Particle::getSolid()
-{
-	return solid;
-}
-
-void Particle::setSolid(bool solid)
-{
-	this->solid = solid;
-}
-
-sf::Color Particle::getColor()
-{
-	if (this)
-		return color;
-}
-
-void Particle::setColor(sf::Color color)
-{
-	this->color = color;
-	this->pixel.color = color;
-}
-
-int Particle::getVelocity()
-{
-	return velocity;
-}
-
-void Particle::setVelocity(int velocity)
-{
-	this->velocity = velocity;
-}
-
-bool Particle::getFlammable()
-{
-	return flammable;
-}
-
-void Particle::setFlammable(bool flammable)
-{
-	this->flammable = flammable;
-}
-
-Particle::~Particle()
-{
-}
-
-SandParticle::SandParticle(pair<int, int> pos)
-{
-	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
-	this->setPos(pos);
-	int randomYellow = rand() % 10 + 1;
-	if (randomYellow % 2 == 0)
-		this->setColor(sf::Color::Yellow);
-	else
-		this->setColor(sf::Color(224, 206, 0));
-	this->setSolid(true);
-	this->setHasToMove(true);
-	this->setVelocity(2);
-	this->setFlammable(false);
-}
-
-void SandParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
-{
-	if (getVelocity() < 5)
-		setVelocity(getVelocity() * ACCELERATION - FRICTION);
-
-	// Try moving the particle down using a constant speed (for now)
-	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
-
-	if (!moveDown) {
-		// Try moving the particle down-left
-		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
-
-		if (!moveDownLeft) {
-			// Try moving the particle down-right
-			bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
-
-			// The particle can't move in any direction for now, so it stays
-			if (!moveDownRight) {
-				setHasToMove(false);
-				return;
-			}
-		}
-	}
-	setHasToMove(true);
-}
-
-SandParticle::~SandParticle()
-{
-}
-
 bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatrix, Particle* particle)
 {
 	pair<int, int> particlePos = particle->getPos();
@@ -380,6 +258,128 @@ ParticleSystem::~ParticleSystem()
 	for (int i = 0; i < 300; i++)
 		for (int j = 0; j < 400; j++)
 			delete particleMatrix[i][j];
+}
+
+sf::Vertex& Particle::getPixel()
+{
+	return pixel;
+}
+
+void Particle::setPixelPos(sf::Vector2f pos)
+{
+	pixel.position = pos;
+}
+
+pair<int, int> Particle::getPos()
+{
+	return pos;
+}
+
+void Particle::setPos(pair<int, int> newPos)
+{
+	pos.first = newPos.first;
+	pos.second = newPos.second;
+}
+
+bool Particle::getHasToMove()
+{
+	return hasToMove;
+}
+
+void Particle::setHasToMove(bool newMove)
+{
+	hasToMove = newMove;
+}
+
+bool Particle::getSolid()
+{
+	return solid;
+}
+
+void Particle::setSolid(bool solid)
+{
+	this->solid = solid;
+}
+
+sf::Color Particle::getColor()
+{
+	if (this)
+		return color;
+}
+
+void Particle::setColor(sf::Color color)
+{
+	this->color = color;
+	this->pixel.color = color;
+}
+
+int Particle::getVelocity()
+{
+	return velocity;
+}
+
+void Particle::setVelocity(int velocity)
+{
+	this->velocity = velocity;
+}
+
+bool Particle::getFlammable()
+{
+	return flammable;
+}
+
+void Particle::setFlammable(bool flammable)
+{
+	this->flammable = flammable;
+}
+
+Particle::~Particle()
+{
+}
+
+SandParticle::SandParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	int randomYellow = rand() % 10 + 1;
+	if (randomYellow % 2 == 0)
+		this->setColor(sf::Color::Yellow);
+	else
+		this->setColor(sf::Color(224, 206, 0));
+	this->setSolid(true);
+	this->setHasToMove(true);
+	this->setVelocity(2);
+	this->setFlammable(false);
+}
+
+void SandParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
+{
+	if (getVelocity() < 5)
+		setVelocity(getVelocity() * ACCELERATION - FRICTION);
+
+	// Try moving the particle down using a constant speed (for now)
+	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
+
+	if (!moveDown) {
+		// Try moving the particle down-left
+		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
+
+		if (!moveDownLeft) {
+			// Try moving the particle down-right
+			bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
+
+			// The particle can't move in any direction for now, so it stays
+			if (!moveDownRight) {
+				setHasToMove(false);
+				return;
+			}
+		}
+	}
+	setHasToMove(true);
+}
+
+SandParticle::~SandParticle()
+{
 }
 
 WaterParticle::WaterParticle(pair<int, int> pos)
@@ -695,5 +695,74 @@ void SmokeParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 }
 
 SmokeParticle::~SmokeParticle()
+{
+}
+
+AcidParticle::AcidParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	this->setColor(sf::Color(145, 200, 47));
+	this->setSolid(false);
+	this->setHasToMove(true);
+	this->setFlammable(false);
+	this->setVelocity(6);
+	this->limit = rand() % 2 + 1;
+}
+
+void AcidParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
+{
+	if (current > limit) {
+		particleMatrix[getPos().first][getPos().second] = nullptr;
+		return;
+	}
+
+	// Try moving the particle down using a constant speed (for now)
+	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
+
+	if (!moveDown) {
+
+		if (getPos().first + 1 < 300 && !dynamic_cast<AcidParticle*>(particleMatrix[getPos().first + 1][getPos().second])) {
+			particleMatrix[getPos().first + 1][getPos().second] = this;
+			particleMatrix[getPos().first][getPos().second] = nullptr;
+			setPos(pair<int, int>(getPos().first + 1, getPos().second));
+			current++;
+		}
+
+		// Try moving the particle down-left
+		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity() - 4, -getVelocity() + 4), particleMatrix, this);
+
+		if (!moveDownLeft) {
+			// Try moving the particle down-right
+			bool moveDownRight = moveParticle(pair<int, int>(getVelocity() - 4, getVelocity() - 4), particleMatrix, this);
+
+			// Try moving the particle left
+			if (!moveDownRight) {
+				bool moveLeft = moveParticle(pair<int, int>(0, -getVelocity() + 4), particleMatrix, this);
+
+				// Try moving the particle right
+				if (!moveLeft) {
+					bool moveRight = moveParticle(pair<int, int>(0, getVelocity() - 4), particleMatrix, this);
+
+					// The particle can't move in any direction for now, so it stays
+					if (!moveRight) {
+						if (getPos().first - 1 > 0 && !dynamic_cast<AcidParticle*>(particleMatrix[getPos().first - 1][getPos().second]) &&
+							particleMatrix[getPos().first - 1][getPos().second]) {
+							particleMatrix[getPos().first - 1][getPos().second] = nullptr;
+							current++;
+						}
+						else {
+							this->setHasToMove(false);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
+	this->setHasToMove(true);
+}
+
+AcidParticle::~AcidParticle()
 {
 }
