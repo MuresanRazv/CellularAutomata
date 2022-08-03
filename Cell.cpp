@@ -145,6 +145,17 @@ bool moveParticle(pair<int, int> moveBy, vector<vector<Particle*>>& particleMatr
 				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
 				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
 			}
+			// If the cell is not empty, but a liquid and the particle is a gas, it will float through the water
+			else if (!particle->getSolid() && !particleMatrix[particlePos.first + x][particlePos.second + y]->getSolid()) {
+				changed = true;
+				particleMatrix[particle->getPos().first][particle->getPos().second] = particleMatrix[particlePos.first + x][particlePos.second + y];
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPos(pair<int, int>(particle->getPos().first, particle->getPos().second));
+				particleMatrix[particle->getPos().first][particle->getPos().second]->setPixelPos(sf::Vector2f(particle->getPos().second * 3, particle->getPos().first * 3));
+
+				particleMatrix[particlePos.first + x][particlePos.second + y] = particle;
+				particle->setPos(pair<int, int>(particlePos.first + x, particlePos.second + y));
+			}
+			else break;
 			if (particle->getPos().first + x >= desiredY)
 				x--;
 
@@ -764,5 +775,144 @@ void AcidParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 }
 
 AcidParticle::~AcidParticle()
+{
+}
+
+LavaParticle::LavaParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+
+	int randLava = rand() % 4 + 1;
+	switch (randLava)
+	{
+	case 1:
+	{
+		this->setColor(sf::Color(255, 37, 0));
+		break;
+	}
+	case 2:
+	{
+		this->setColor(sf::Color(255, 102, 0));
+		break;
+	}
+	case 3:
+	{
+		this->setColor(sf::Color(242, 242, 23));
+		break;
+	}
+	case 4:
+	{
+		this->setColor(sf::Color(234, 92, 15));
+		break;
+	}
+	default:
+		break;
+	}
+	this->setSolid(false);
+	this->setHasToMove(true);
+	this->setFlammable(false);
+	this->setVelocity(4);
+}
+
+void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
+{
+	// Since lava is really hot, we will also set on fire any particle that is flammable and next to it
+	int up = getPos().first - 1, down = getPos().first + 1;
+	int left = getPos().second - 1, right = getPos().second + 1;
+
+	// Up
+	if (up > 0 && particleMatrix[up][getPos().second] && particleMatrix[up][getPos().second]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(up, getPos().second));
+
+		if (particleMatrix[up][getPos().second]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[up][getPos().second];
+		particleMatrix[up][getPos().second] = fireParticle;
+	}
+	// Down
+	if (down < 300 && particleMatrix[down][getPos().second] && particleMatrix[down][getPos().second]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(down, getPos().second));
+
+		if (particleMatrix[down][getPos().second]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[down][getPos().second];
+		particleMatrix[down][getPos().second] = fireParticle;
+	}
+	// Down-Left
+	if (down < 300 && left > 0 && particleMatrix[down][left] && particleMatrix[down][left]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(down, left));
+
+		if (particleMatrix[down][left]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[down][left];
+		particleMatrix[down][left] = fireParticle;
+	}
+	// Down-Right
+	if (down < 300 && right < 400 && particleMatrix[down][right] && particleMatrix[down][right]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(down, right));
+
+		if (particleMatrix[down][right]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[down][right];
+		particleMatrix[down][right] = fireParticle;
+	}
+	// Left
+	if (left > 0 && particleMatrix[getPos().first][left] && particleMatrix[getPos().first][left]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(getPos().first, left));
+
+		if (particleMatrix[getPos().first][left]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[getPos().first][left];
+		particleMatrix[getPos().first][left] = fireParticle;
+	}
+	// Right
+	if (right < 400 && particleMatrix[getPos().first][right] && particleMatrix[getPos().first][right]->getFlammable()) {
+		Particle* fireParticle = new FireParticle(pair<int, int>(getPos().first, right));
+
+		if (particleMatrix[getPos().first][right]->getSolid())
+			fireParticle->setSolid(true);
+
+		delete particleMatrix[getPos().first][right];
+		particleMatrix[getPos().first][right] = fireParticle;
+	}
+
+	// Try moving the particle down using a constant speed
+	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
+
+	if (!moveDown) {
+		// Try moving the particle down-left
+		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
+
+		if (!moveDownLeft) {
+			// Try moving the particle down-right
+			bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
+
+			// Try moving the particle left
+			if (!moveDownRight) {
+				bool moveLeft = moveParticle(pair<int, int>(0, -getVelocity()), particleMatrix, this);
+
+				// Try moving the particle right
+				if (!moveLeft) {
+					bool moveRight = moveParticle(pair<int, int>(0, getVelocity()), particleMatrix, this);
+
+					// The particle can't move in any direction for now, so it stays
+					if (!moveRight) {
+						this->setHasToMove(false);
+						return;
+					}
+				}
+			}
+		}
+	}
+	this->setHasToMove(true);
+}
+
+LavaParticle::~LavaParticle()
 {
 }

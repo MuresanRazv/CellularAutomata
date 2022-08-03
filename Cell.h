@@ -129,6 +129,15 @@ public:
 	~AcidParticle();
 };
 
+class LavaParticle : public Particle {
+public:
+	LavaParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~LavaParticle();
+};
+
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);
