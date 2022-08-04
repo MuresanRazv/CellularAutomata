@@ -138,6 +138,15 @@ public:
 	~LavaParticle();
 };
 
+class OilParticle : public Particle {
+public:
+	OilParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~OilParticle();
+};
+
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);

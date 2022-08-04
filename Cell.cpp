@@ -474,9 +474,10 @@ FireParticle::FireParticle(pair<int, int> pos)
 	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
 	this->setPos(pos);
 	this->setColor(sf::Color(150, 0, 0));
-	this->setSolid(false);
+	this->setSolid(true);
 	this->setHasToMove(false);
 	this->setFlammable(false);
+	this->setVelocity(8);
 
 	// Start lifetime
 	this->lifetime.restart();
@@ -523,6 +524,38 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		break;
 	}
 
+	// If the fire particle is not solid ( for example oil which is on fire ) it will move just like a liquid
+	if (!this->getSolid()) {
+		// Try moving the particle down using a constant speed
+		bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
+
+		if (!moveDown) {
+			// Try moving the particle down-left
+			bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
+
+			if (!moveDownLeft) {
+				// Try moving the particle down-right
+				bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
+
+				// Try moving the particle left
+				if (!moveDownRight) {
+					bool moveLeft = moveParticle(pair<int, int>(0, -getVelocity()), particleMatrix, this);
+
+					// Try moving the particle right
+					if (!moveLeft) {
+						bool moveRight = moveParticle(pair<int, int>(0, getVelocity()), particleMatrix, this);
+
+						// The particle can't move in any direction for now, so it stays
+						if (!moveRight) {
+							this->setHasToMove(false);
+						}
+					}
+				}
+			}
+		}
+		this->setHasToMove(true);
+	}
+
 	// Once a particle 'catches' on fire, it will be switched with a fire particle and purged, once the lifetime
 	// of the fire particle reaches its limit, it will be purged as well
 
@@ -536,19 +569,17 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 	else {
 		// Look in every direction to spread the fire, if the particle can catch fire, also spread in random directions
-		// ( for now, the only particle that can catch fire is wood )
-
 		int randDir = rand() % 8 + 1;
 
 		pair<int, int> pos = getPos();
-		bool up = (particleMatrix[pos.first - 1][pos.second] && particleMatrix[pos.first - 1][pos.second]->getFlammable());
-		bool down = (particleMatrix[pos.first + 1][pos.second] && particleMatrix[pos.first + 1][pos.second]->getFlammable());
-		bool left = (particleMatrix[pos.first][pos.second - 1] && particleMatrix[pos.first][pos.second - 1]->getFlammable());
-		bool right = (particleMatrix[pos.first][pos.second + 1] && particleMatrix[pos.first][pos.second + 1]->getFlammable());
-		bool up_left = (particleMatrix[pos.first - 1][pos.second - 1] && particleMatrix[pos.first - 1][pos.second - 1]->getFlammable());
-		bool up_right = (particleMatrix[pos.first - 1][pos.second + 1] && particleMatrix[pos.first - 1][pos.second + 1]->getFlammable());
-		bool down_left = (particleMatrix[pos.first + 1][pos.second - 1] && particleMatrix[pos.first + 1][pos.second - 1]->getFlammable());
-		bool down_right = (particleMatrix[pos.first + 1][pos.second + 1] && particleMatrix[pos.first + 1][pos.second + 1]->getFlammable());
+		bool up = (pos.first - 1 > 0 && particleMatrix[pos.first - 1][pos.second] && particleMatrix[pos.first - 1][pos.second]->getFlammable());
+		bool down = (pos.first + 1 < 300 && particleMatrix[pos.first + 1][pos.second] && particleMatrix[pos.first + 1][pos.second]->getFlammable());
+		bool left = (pos.second - 1 > 0 && particleMatrix[pos.first][pos.second - 1] && particleMatrix[pos.first][pos.second - 1]->getFlammable());
+		bool right = (pos.second + 1 < 400 && particleMatrix[pos.first][pos.second + 1] && particleMatrix[pos.first][pos.second + 1]->getFlammable());
+		bool up_left = (pos.first - 1 > 0 && pos.second - 1 > 0 && particleMatrix[pos.first - 1][pos.second - 1] && particleMatrix[pos.first - 1][pos.second - 1]->getFlammable());
+		bool up_right = (pos.first - 1 > 0 && pos.second + 1 < 400 && particleMatrix[pos.first - 1][pos.second + 1] && particleMatrix[pos.first - 1][pos.second + 1]->getFlammable());
+		bool down_left = (pos.first + 1 < 300 && pos.second - 1 > 0 && particleMatrix[pos.first + 1][pos.second - 1] && particleMatrix[pos.first + 1][pos.second - 1]->getFlammable());
+		bool down_right = (pos.first + 1 < 300 && pos.second + 1 < 400 && particleMatrix[pos.first + 1][pos.second + 1] && particleMatrix[pos.first + 1][pos.second + 1]->getFlammable());
 
 		// Set each particle that is flammable on fire (will have to deal with water afterwards, which will produce steam)
 
@@ -558,6 +589,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first - 1][pos.second]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first - 1][pos.second];
 			particleMatrix[pos.first - 1][pos.second] = fireParticle;
@@ -569,6 +602,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first + 1][pos.second]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first + 1][pos.second];
 			particleMatrix[pos.first + 1][pos.second] = fireParticle;
@@ -580,6 +615,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first][pos.second - 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first][pos.second - 1];
 			particleMatrix[pos.first][pos.second - 1] = fireParticle;
@@ -591,6 +628,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first][pos.second + 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first][pos.second + 1];
 			particleMatrix[pos.first][pos.second + 1] = fireParticle;
@@ -602,6 +641,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first - 1][pos.second - 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first - 1][pos.second - 1];
 			particleMatrix[pos.first - 1][pos.second - 1] = fireParticle;
@@ -613,6 +654,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first - 1][pos.second + 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first - 1][pos.second + 1];
 			particleMatrix[pos.first - 1][pos.second + 1] = fireParticle;
@@ -624,6 +667,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first + 1][pos.second - 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first + 1][pos.second - 1];
 			particleMatrix[pos.first + 1][pos.second - 1] = fireParticle;
@@ -635,6 +680,8 @@ void FireParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 			if (particleMatrix[pos.first + 1][pos.second + 1]->getSolid())
 				fireParticle->setSolid(true);
+			else
+				fireParticle->setSolid(false);
 
 			delete particleMatrix[pos.first + 1][pos.second + 1];
 			particleMatrix[pos.first + 1][pos.second + 1] = fireParticle;
@@ -914,5 +961,52 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 }
 
 LavaParticle::~LavaParticle()
+{
+}
+
+OilParticle::OilParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	this->setColor(sf::Color(90, 74, 24));
+	this->setSolid(false);
+	this->setHasToMove(true);
+	this->setFlammable(true);
+	this->setVelocity(10);
+}
+
+void OilParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
+{
+	// Try moving the particle down using a constant speed
+	bool moveDown = moveParticle(pair<int, int>(getVelocity(), 0), particleMatrix, this);
+
+	if (!moveDown) {
+		// Try moving the particle down-left
+		bool moveDownLeft = moveParticle(pair<int, int>(getVelocity(), -getVelocity()), particleMatrix, this);
+
+		if (!moveDownLeft) {
+			// Try moving the particle down-right
+			bool moveDownRight = moveParticle(pair<int, int>(getVelocity(), getVelocity()), particleMatrix, this);
+
+			// Try moving the particle left
+			if (!moveDownRight) {
+				bool moveLeft = moveParticle(pair<int, int>(0, -getVelocity()), particleMatrix, this);
+
+				// Try moving the particle right
+				if (!moveLeft) {
+					bool moveRight = moveParticle(pair<int, int>(0, getVelocity()), particleMatrix, this);
+
+					// The particle can't move in any direction for now, so it stays
+					if (!moveRight) {
+						this->setHasToMove(false);
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
+OilParticle::~OilParticle()
 {
 }
