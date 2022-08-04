@@ -147,6 +147,15 @@ public:
 	~OilParticle();
 };
 
+class StoneParticle : public Particle {
+public:
+	StoneParticle(pair<int, int> pos);
+
+	void applyLaw(vector<vector<Particle*>>& particleMatrix);
+
+	~StoneParticle();
+};
+
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 public:
 	void addParticle(Particle* particle);

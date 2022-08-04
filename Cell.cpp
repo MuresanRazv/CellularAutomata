@@ -878,6 +878,12 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		delete particleMatrix[up][getPos().second];
 		particleMatrix[up][getPos().second] = fireParticle;
 	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (up > 0 && dynamic_cast<WaterParticle*>(particleMatrix[up][getPos().second]))
+	{
+		particleMatrix[up][getPos().second] = new StoneParticle(pair<int, int>(up, getPos().second));
+	}
+
 	// Down
 	if (down < 300 && particleMatrix[down][getPos().second] && particleMatrix[down][getPos().second]->getFlammable()) {
 		Particle* fireParticle = new FireParticle(pair<int, int>(down, getPos().second));
@@ -888,6 +894,12 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		delete particleMatrix[down][getPos().second];
 		particleMatrix[down][getPos().second] = fireParticle;
 	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (down < 300 && dynamic_cast<WaterParticle*>(particleMatrix[down][getPos().second]))
+	{
+		particleMatrix[down][getPos().second] = new StoneParticle(pair<int, int>(down, getPos().second));
+	}
+
 	// Down-Left
 	if (down < 300 && left > 0 && particleMatrix[down][left] && particleMatrix[down][left]->getFlammable()) {
 		Particle* fireParticle = new FireParticle(pair<int, int>(down, left));
@@ -898,6 +910,12 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		delete particleMatrix[down][left];
 		particleMatrix[down][left] = fireParticle;
 	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (down < 300 && left > 0 && dynamic_cast<WaterParticle*>(particleMatrix[down][left]))
+	{
+		particleMatrix[down][left] = new StoneParticle(pair<int, int>(down, left));
+	}
+
 	// Down-Right
 	if (down < 300 && right < 400 && particleMatrix[down][right] && particleMatrix[down][right]->getFlammable()) {
 		Particle* fireParticle = new FireParticle(pair<int, int>(down, right));
@@ -908,6 +926,12 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		delete particleMatrix[down][right];
 		particleMatrix[down][right] = fireParticle;
 	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (down < 300 && right < 400 && dynamic_cast<WaterParticle*>(particleMatrix[down][right]))
+	{
+		particleMatrix[down][right] = new StoneParticle(pair<int, int>(down, right));
+	}
+
 	// Left
 	if (left > 0 && particleMatrix[getPos().first][left] && particleMatrix[getPos().first][left]->getFlammable()) {
 		Particle* fireParticle = new FireParticle(pair<int, int>(getPos().first, left));
@@ -918,6 +942,12 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 		delete particleMatrix[getPos().first][left];
 		particleMatrix[getPos().first][left] = fireParticle;
 	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (left > 0 && dynamic_cast<WaterParticle*>(particleMatrix[getPos().first][left]))
+	{
+		particleMatrix[getPos().first][left] = new StoneParticle(pair<int, int>(getPos().first, left));
+	}
+
 	// Right
 	if (right < 400 && particleMatrix[getPos().first][right] && particleMatrix[getPos().first][right]->getFlammable()) {
 		Particle* fireParticle = new FireParticle(pair<int, int>(getPos().first, right));
@@ -927,6 +957,11 @@ void LavaParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 
 		delete particleMatrix[getPos().first][right];
 		particleMatrix[getPos().first][right] = fireParticle;
+	}
+	// If lava comes in contact with water, the water particle will solidify into a rock particle
+	else if (right < 400 && dynamic_cast<WaterParticle*>(particleMatrix[getPos().first][right]))
+	{
+		particleMatrix[getPos().first][right] = new StoneParticle(pair<int, int>(getPos().first, right));
 	}
 
 	// Try moving the particle down using a constant speed
@@ -1008,5 +1043,24 @@ void OilParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
 }
 
 OilParticle::~OilParticle()
+{
+}
+
+StoneParticle::StoneParticle(pair<int, int> pos)
+{
+	this->setPixelPos(sf::Vector2f(pos.second, pos.first));
+	this->setPos(pos);
+	this->setColor(sf::Color(81, 80, 81));
+	this->setSolid(true);
+	this->setHasToMove(false);
+	this->setFlammable(false);
+}
+
+void StoneParticle::applyLaw(vector<vector<Particle*>>& particleMatrix)
+{
+	return;
+}
+
+StoneParticle::~StoneParticle()
 {
 }
